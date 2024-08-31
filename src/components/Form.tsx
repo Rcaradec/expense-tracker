@@ -49,6 +49,9 @@ type Task = z.infer<typeof schema>;
 
 const Form = () => {
   const [tasksList, setTasksList] = useState<Task[]>(tasksListBase);
+  const [filteredTasksList, setFilteredTasksList] = useState<Task[]>(tasksList);
+  console.log("tasksList", tasksList);
+  const [selectedCat, setSelectedCat] = useState<string>("");
 
   const {
     handleSubmit,
@@ -68,9 +71,26 @@ const Form = () => {
     console.log("updated tasksList", tasksList);
   };
 
+  const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedCategory = event.target.value;
+    setSelectedCat(selectedCategory);
+    if (selectedCategory === "") {
+      setFilteredTasksList(tasksList);
+    } else {
+      setFilteredTasksList(
+        tasksList.filter((task) => task.category === selectedCategory)
+      );
+    }
+  };
+
+  const handleResetClick = () => {
+    setFilteredTasksList(tasksList);
+    setSelectedCat("");
+  };
+
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} className="mb-5">
         <div className="mb-3">
           <label htmlFor="description" className="form-label">
             Description
@@ -120,7 +140,35 @@ const Form = () => {
         <button className="btn btn-primary">Submit</button>
       </form>
 
-      <table className="table mt-5">
+      <select
+        className="form-select mb-3"
+        id="category"
+        aria-label="Categories Select"
+        {...register("category")}
+        onChange={handleSelectChange}
+      >
+        <option value="">Filtrer une catégorie</option>
+        {categories.map((category) => (
+          <option key={category} value={category}>
+            {category}
+          </option>
+        ))}
+      </select>
+      <div className="d-flex gap-1 align-items-center">
+        <p className="mb-0">Réintialiser le filtre de catégories:</p>
+        <button
+          className="btn border border-info btn-close"
+          onClick={handleResetClick}
+        ></button>
+      </div>
+      {selectedCat !== "" && (
+        <p className="">
+          La liste affiche la catégorie:{" "}
+          <strong className="text-primary">{selectedCat}</strong>
+        </p>
+      )}
+
+      <table className="table">
         <thead>
           <tr>
             <th scope="col">Description</th>
@@ -130,7 +178,7 @@ const Form = () => {
           </tr>
         </thead>
         <tbody>
-          {tasksList.map((task) => (
+          {filteredTasksList.map((task) => (
             <tr key={task.description}>
               <td>{task.description}</td>
               <td>{task.amount}€</td>
@@ -152,3 +200,4 @@ const Form = () => {
 };
 
 export default Form;
+//? ajouter un texte et un bouton pour pouvoir afficher a nouveau toutes les catégories.
