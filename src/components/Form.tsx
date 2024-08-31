@@ -1,9 +1,41 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 const categories: string[] = ["Courses", "Utilitaire", "Loisirs"];
+const tasksListBase = [
+  {
+    description: "Lait",
+    amount: 5,
+    category: "Courses",
+  },
+  {
+    description: "Vaisselle",
+    amount: 8,
+    category: "Utilitaire",
+  },
+  {
+    description: "Repassage",
+    amount: 10,
+    category: "Utilitaire",
+  },
+  {
+    description: "Pétanque",
+    amount: 15,
+    category: "Loisirs",
+  },
+  {
+    description: "Ping-pong",
+    amount: 35,
+    category: "Loisirs",
+  },
+  {
+    description: "Paic citron",
+    amount: 3,
+    category: "Courses",
+  },
+];
 
 const schema = z.object({
   description: z
@@ -16,7 +48,7 @@ const schema = z.object({
 type Task = z.infer<typeof schema>;
 
 const Form = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasksList, setTasksList] = useState<Task[]>(tasksListBase);
 
   const {
     handleSubmit,
@@ -27,9 +59,13 @@ const Form = () => {
   });
 
   const onSubmit = (newTask: Task) => {
-    console.log(tasks);
-    setTasks([...tasks, newTask]);
-    console.log(tasks);
+    setTasksList([...tasksList, newTask]);
+    console.log(tasksList);
+  };
+
+  const handleDelete = (selectedtask: Task) => {
+    setTasksList(tasksList.filter((task) => task !== selectedtask));
+    console.log("updated tasksList", tasksList);
   };
 
   return (
@@ -83,6 +119,34 @@ const Form = () => {
         )}
         <button className="btn btn-primary">Submit</button>
       </form>
+
+      <table className="table mt-5">
+        <thead>
+          <tr>
+            <th scope="col">Description</th>
+            <th scope="col">Montant</th>
+            <th scope="col">Catégorie</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tasksList.map((task) => (
+            <tr key={task.description}>
+              <td>{task.description}</td>
+              <td>{task.amount}€</td>
+              <td>{task.category}</td>
+              <td>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => handleDelete(task)}
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </>
   );
 };
