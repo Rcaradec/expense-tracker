@@ -50,7 +50,6 @@ type Task = z.infer<typeof schema>;
 const Form = () => {
   const [tasksList, setTasksList] = useState<Task[]>(tasksListBase);
   const [filteredTasksList, setFilteredTasksList] = useState<Task[]>(tasksList);
-  console.log("tasksList", tasksList);
   const [selectedCat, setSelectedCat] = useState<string>("");
 
   const {
@@ -63,12 +62,15 @@ const Form = () => {
 
   const onSubmit = (newTask: Task) => {
     setTasksList([...tasksList, newTask]);
-    console.log(tasksList);
+    setFilteredTasksList([...tasksList, newTask]);
   };
 
-  const handleDelete = (selectedtask: Task) => {
-    setTasksList(tasksList.filter((task) => task !== selectedtask));
-    console.log("updated tasksList", tasksList);
+  const handleDelete = (taskToDelete: Task) => {
+    const updatedTasksList = tasksList.filter(
+      (task) => task.description !== taskToDelete.description
+    );
+    setTasksList(updatedTasksList);
+    setFilteredTasksList(updatedTasksList);
   };
 
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -144,20 +146,19 @@ const Form = () => {
         className="form-select mb-3"
         id="category"
         aria-label="Categories Select"
-        {...register("category")}
         onChange={handleSelectChange}
       >
-        <option value="">Filtrer une catégorie</option>
+        <option value="">Filtrer par catégorie</option>
         {categories.map((category) => (
           <option key={category} value={category}>
             {category}
           </option>
         ))}
       </select>
-      <div className="d-flex gap-1 align-items-center">
+      <div className="d-flex gap-2 align-items-center">
         <p className="mb-0">Réintialiser le filtre de catégories:</p>
         <button
-          className="btn border border-info btn-close"
+          className="btn border border-primary btn-close"
           onClick={handleResetClick}
         ></button>
       </div>
@@ -188,7 +189,7 @@ const Form = () => {
                   className="btn btn-danger"
                   onClick={() => handleDelete(task)}
                 >
-                  Delete
+                  Supprimer
                 </button>
               </td>
             </tr>
@@ -200,4 +201,3 @@ const Form = () => {
 };
 
 export default Form;
-//? ajouter un texte et un bouton pour pouvoir afficher a nouveau toutes les catégories.
