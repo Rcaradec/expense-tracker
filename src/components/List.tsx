@@ -8,6 +8,7 @@ type Props = {
   selectedCat: string;
   handleSelectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   handleResetClick: () => void;
+  totalPrice: number;
 };
 
 const List = ({
@@ -16,6 +17,7 @@ const List = ({
   selectedCat,
   handleSelectChange,
   handleResetClick,
+  totalPrice,
 }: Props) => {
   return (
     <>
@@ -74,6 +76,12 @@ const List = ({
           ))}
         </tbody>
       </table>
+      {selectedCat !== "" && (
+        <p>
+          Total pour {selectedCat}:{" "}
+          <strong className="text-primary">{totalPrice}€</strong>
+        </p>
+      )}
     </>
   );
 };
