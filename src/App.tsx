@@ -16,7 +16,6 @@ const App: React.FC = () => {
       const total = tasksList
         .filter((task) => task.category === selectedCat)
         .reduce((sum, task) => sum + task.amount, 0);
-      console.log("total", total);
       setTotalPrice(total);
     } else {
       setTotalPrice(0);
