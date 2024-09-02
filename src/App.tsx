@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import Form from "./components/Form";
 import { tasksListBase, categories } from "./data/tasksListData.ts";
@@ -9,6 +9,19 @@ const App: React.FC = () => {
   const [tasksList, setTasksList] = useState<Task[]>(tasksListBase);
   const [filteredTasksList, setFilteredTasksList] = useState<Task[]>(tasksList);
   const [selectedCat, setSelectedCat] = useState<string>("");
+  const [totalPrice, setTotalPrice] = useState<number>(0);
+
+  useEffect(() => {
+    if (selectedCat) {
+      const total = tasksList
+        .filter((task) => task.category === selectedCat)
+        .reduce((sum, task) => sum + task.amount, 0);
+      console.log("total", total);
+      setTotalPrice(total);
+    } else {
+      setTotalPrice(0);
+    }
+  }, [selectedCat, tasksList]);
 
   const handleDelete = (taskToDelete: Task) => {
     const updatedTasksList = tasksList.filter(
@@ -52,6 +65,7 @@ const App: React.FC = () => {
         handleSelectChange={handleSelectChange}
         handleResetClick={handleResetClick}
         selectedCat={selectedCat}
+        totalPrice={totalPrice}
       />
     </>
   );
