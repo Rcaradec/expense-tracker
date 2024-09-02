@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
-const categories: string[] = ["Courses", "Utilitaire", "Loisirs"];
 
 const schema = z.object({
   description: z
@@ -13,11 +11,24 @@ const schema = z.object({
   category: z.string().min(1, { message: "Veuillez sélectionner une option" }),
 });
 
-type Task = z.infer<typeof schema>;
+export type Task = z.infer<typeof schema>;
 
-const Form = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+type Props = {
+  tasksList: Task[];
+  setTasksList: React.Dispatch<React.SetStateAction<Task[]>>;
+  setFilteredTasksList: React.Dispatch<React.SetStateAction<Task[]>>;
+  selectedCat: string;
+  setSelectedCat: React.Dispatch<React.SetStateAction<string>>;
+  categories: string[];
+};
 
+const Form = ({
+  tasksList,
+  setTasksList,
+  setFilteredTasksList,
+
+  categories,
+}: Props) => {
   const {
     handleSubmit,
     register,
@@ -27,14 +38,13 @@ const Form = () => {
   });
 
   const onSubmit = (newTask: Task) => {
-    console.log(tasks);
-    setTasks([...tasks, newTask]);
-    console.log(tasks);
+    setTasksList([...tasksList, newTask]);
+    setFilteredTasksList([...tasksList, newTask]);
   };
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} className="mb-5">
         <div className="mb-3">
           <label htmlFor="description" className="form-label">
             Description
@@ -81,7 +91,7 @@ const Form = () => {
         {errors.category && (
           <p className="text-danger">{errors.category.message} </p>
         )}
-        <button className="btn btn-primary">Submit</button>
+        <button className="btn btn-primary">Envoyer</button>
       </form>
     </>
   );
