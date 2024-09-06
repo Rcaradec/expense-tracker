@@ -23,3 +23,7 @@ h1::after {
   height: 3px;
   background: #ff6347;
 }
+
+.table-hover-custom tbody tr:hover {
+  background-color: #f1f1f1;
+}

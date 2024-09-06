@@ -3,14 +3,17 @@ import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createExpense } from "../api/queries";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Category, ExpensePayload } from "../api/types";
 
 const schema = z.object({
   description: z
     .string()
     .min(3, { message: "Veuillez renseigner au moins 3 caracteres" }),
-  amount: z.number({ invalid_type_error: "Un montant est requis" }).min(1),
+  amount: z
+    .number({ invalid_type_error: "Un montant est requis" })
+    .nonnegative({ message: "Pas de valeur négative" })
+    .min(1),
   category: z.string().min(1, { message: "Veuillez sélectionner une option" }),
 });
 
@@ -23,22 +26,27 @@ type Props = {
 };
 
 const Form = ({ categories }: Props) => {
+  const queryClient = useQueryClient();
+
   const {
     handleSubmit,
     register,
     formState: { errors },
+    reset,
   } = useForm<Task>({
     resolver: zodResolver(schema),
   });
 
+  //? Mutation Create
   const mutation = useMutation({
     mutationKey: ["newExpense"],
     mutationFn: createExpense,
-    onSuccess: (data) => {
-      console.log("Task created successfully:", data);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["expensesData"] });
+      reset();
     },
     onError: (error) => {
-      console.error("Error creating task:", error);
+      console.error("Error creating expense:", error);
     },
   });
 

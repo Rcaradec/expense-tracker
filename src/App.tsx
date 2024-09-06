@@ -2,70 +2,78 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 import Form from "./components/Form";
 import List from "./components/List";
-import { fetchExpensesList, fetchCategories } from "./api/queries";
-import { useQuery } from "@tanstack/react-query";
+import {
+  fetchExpensesList,
+  fetchCategories,
+  deleteExpense,
+} from "./api/queries";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Category, Expense } from "./api/types";
 
 const App: React.FC = () => {
-  const {
-    data: expenses,
-    error: expensesError,
-    isLoading: expensesIsLoading,
-  } = useQuery<Expense[]>({
+  const queryClient = useQueryClient();
+  const { data: expensesData } = useQuery<Expense[]>({
     queryKey: ["expensesData"],
     queryFn: fetchExpensesList,
   });
 
-  const {
-    data: categoriesData,
-    error: categoriesError,
-    isLoading: categoriesIsLoading,
-  } = useQuery<Category[]>({
+  const { data: categoriesData } = useQuery<Category[]>({
     queryKey: ["categories"],
     queryFn: fetchCategories,
   });
 
-  const [expensesList, setExpensesList] = useState<Expense[]>(expenses || []);
-  const [filteredExpensesList, setFilteredExpensesList] =
-    useState<Expense[]>(expensesList);
+  const [filteredExpensesList, setFilteredExpensesList] = useState<Expense[]>(
+    []
+  );
   const [selectedCat, setSelectedCat] = useState<string>("");
 
   useEffect(() => {
-    if (expenses) {
-      setExpensesList(expenses);
-      setFilteredExpensesList(expenses);
+    if (expensesData) {
+      setFilteredExpensesList(expensesData);
     }
-  }, [expenses]);
+  }, [expensesData]);
 
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedCategory = event.target.value;
     setSelectedCat(selectedCategory);
+
+    if (!expensesData) return;
+
     if (selectedCategory === "") {
-      setFilteredExpensesList(expensesList);
+      setFilteredExpensesList(expensesData);
     } else {
-      setFilteredExpensesList(
-        expensesList.filter(
-          (task: Expense) => task.category === selectedCategory
-        )
+      const filteredExpenses = expensesData.filter(
+        (expense) => expense.category === selectedCategory
       );
+      setFilteredExpensesList(filteredExpenses);
     }
   };
 
   const handleResetClick = () => {
-    console.log("Refaire le reset");
     setSelectedCat("");
+    if (expensesData) setFilteredExpensesList(expensesData);
   };
 
-  const handleDelete = () => {
-    console.log("refaire le delete");
-  };
+  const mutation = useMutation({
+    mutationKey: ["deleteExpense"],
+    mutationFn: deleteExpense,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["expensesData"] });
+    },
+    onError: (error) => {
+      console.error("Error deleting expense:", error);
+    },
+  });
 
-  if (expensesIsLoading) return <div>Fetching tasks...</div>;
-  if (expensesError)
-    return <div>An error occurred: {expensesError.message}</div>;
-  if (categoriesIsLoading) return <div>Fetching categories...</div>;
-  if (categoriesError)
-    return <div>An error occurred: {categoriesError.message}</div>;
+  const handleDelete = (expenseId: number) => {
+    mutation.mutate(expenseId, {
+      onSuccess: () => {
+        setFilteredExpensesList((prevList) =>
+          prevList.filter((expense) => expense.id !== expenseId)
+        );
+      },
+    });
+  };
 
   return (
     <>
@@ -76,7 +84,6 @@ const App: React.FC = () => {
         categories={categoriesData || []}
       />
       <List
-        expensesList={expensesList}
         handleDelete={handleDelete}
         handleSelectChange={handleSelectChange}
         handleResetClick={handleResetClick}

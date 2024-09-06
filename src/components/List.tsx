@@ -1,14 +1,13 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Category, Expense } from "../api/types";
 
 type Props = {
   filteredExpensesList: Expense[];
-  handleDelete: (expenseToDelete: Expense) => void;
+  handleDelete: (expenseId: number) => void;
   selectedCat: string;
   handleSelectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   handleResetClick: () => void;
   categories: Category[];
-  expensesList: Expense[];
 };
 
 const List = ({
@@ -19,6 +18,8 @@ const List = ({
   handleResetClick,
   categories,
 }: Props) => {
+  useEffect(() => {}, [filteredExpensesList]);
+
   return (
     <>
       <select
@@ -49,7 +50,7 @@ const List = ({
           <strong className="text-primary">{selectedCat}</strong>
         </p>
       )}
-      <table className="table">
+      <table className="table table-hover-custom">
         <thead>
           <tr>
             <th scope="col">Description</th>
@@ -59,30 +60,37 @@ const List = ({
           </tr>
         </thead>
         <tbody>
-          {filteredExpensesList?.map((expense) => (
-            <tr key={expense.id}>
-              <td>{expense.description}</td>
-              <td>{expense.amount}€</td>
-              <td>{expense.category}</td>
-              <td>
-                <button
-                  className="btn btn-outline-danger"
-                  onClick={() => handleDelete(expense)}
-                >
-                  Supprimer
-                </button>
-              </td>
+          {filteredExpensesList?.length > 0 &&
+            filteredExpensesList.map((expense) => (
+              <tr key={expense.id}>
+                <td>{expense.description}</td>
+                <td>{expense.amount}€</td>
+                <td>{expense.category}</td>
+                <td>
+                  <button
+                    className="btn btn-outline-danger"
+                    onClick={() => handleDelete(expense.id)}
+                  >
+                    Supprimer
+                  </button>
+                </td>
+              </tr>
+            ))}
+          {filteredExpensesList?.length === 0 && (
+            <tr>
+              <td colSpan={4}>Aucune dépense trouvée</td>
             </tr>
-          ))}
+          )}
         </tbody>
         <tfoot>
           <tr>
             <td>Total</td>
             <td>
               {" "}
-              {filteredExpensesList
-                .reduce((acc, expense) => expense.amount + acc, 0)
-                .toFixed(2)}
+              {filteredExpensesList?.length > 0 &&
+                filteredExpensesList
+                  .reduce((acc, expense) => expense.amount + acc, 0)
+                  .toFixed(2)}
               €
             </td>
             <td></td>
@@ -90,12 +98,6 @@ const List = ({
           </tr>
         </tfoot>
       </table>
-      {selectedCat !== "" && (
-        <p>
-          Total pour {selectedCat}:{" "}
-          <strong className="text-primary">A REVOIR€</strong>
-        </p>
-      )}
     </>
   );
 };
