@@ -1,23 +1,23 @@
 import React from "react";
-import { Task } from "./Form";
-import { categories } from "../data/tasksListData.ts";
+import { Category, Expense } from "../api/types";
 
 type Props = {
-  filteredTasksList: Task[];
-  handleDelete: (taskToDelete: Task) => void;
+  filteredExpensesList: Expense[];
+  handleDelete: (expenseToDelete: Expense) => void;
   selectedCat: string;
   handleSelectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   handleResetClick: () => void;
-  totalPrice: number;
+  categories: Category[];
+  expensesList: Expense[];
 };
 
 const List = ({
-  filteredTasksList,
+  filteredExpensesList,
   handleDelete,
   selectedCat,
   handleSelectChange,
   handleResetClick,
-  totalPrice,
+  categories,
 }: Props) => {
   return (
     <>
@@ -29,8 +29,8 @@ const List = ({
       >
         <option value="">Filtrer par catégorie</option>
         {categories.map((category) => (
-          <option key={category} value={category}>
-            {category}
+          <option key={category.id} value={category.name}>
+            {category.name}
           </option>
         ))}
       </select>
@@ -59,15 +59,15 @@ const List = ({
           </tr>
         </thead>
         <tbody>
-          {filteredTasksList.map((task) => (
-            <tr key={task.description}>
-              <td>{task.description}</td>
-              <td>{task.amount}€</td>
-              <td>{task.category}</td>
+          {filteredExpensesList?.map((expense) => (
+            <tr key={expense.id}>
+              <td>{expense.description}</td>
+              <td>{expense.amount}€</td>
+              <td>{expense.category}</td>
               <td>
                 <button
-                  className="btn btn-danger"
-                  onClick={() => handleDelete(task)}
+                  className="btn btn-outline-danger"
+                  onClick={() => handleDelete(expense)}
                 >
                   Supprimer
                 </button>
@@ -75,11 +75,25 @@ const List = ({
             </tr>
           ))}
         </tbody>
+        <tfoot>
+          <tr>
+            <td>Total</td>
+            <td>
+              {" "}
+              {filteredExpensesList
+                .reduce((acc, expense) => expense.amount + acc, 0)
+                .toFixed(2)}
+              €
+            </td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tfoot>
       </table>
       {selectedCat !== "" && (
         <p>
           Total pour {selectedCat}:{" "}
-          <strong className="text-primary">{totalPrice}€</strong>
+          <strong className="text-primary">A REVOIR€</strong>
         </p>
       )}
     </>

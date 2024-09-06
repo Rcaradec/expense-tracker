@@ -1,70 +1,88 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import Form from "./components/Form";
-import { tasksListBase, categories } from "./data/tasksListData.ts";
-import { Task } from "./components/Form.tsx";
-import List from "./components/List.tsx";
+import List from "./components/List";
+import { fetchExpensesList, fetchCategories } from "./api/queries";
+import { useQuery } from "@tanstack/react-query";
+import { Category, Expense } from "./api/types";
 
 const App: React.FC = () => {
-  const [tasksList, setTasksList] = useState<Task[]>(tasksListBase);
-  const [filteredTasksList, setFilteredTasksList] = useState<Task[]>(tasksList);
+  const {
+    data: expenses,
+    error: expensesError,
+    isLoading: expensesIsLoading,
+  } = useQuery<Expense[]>({
+    queryKey: ["expensesData"],
+    queryFn: fetchExpensesList,
+  });
+
+  const {
+    data: categoriesData,
+    error: categoriesError,
+    isLoading: categoriesIsLoading,
+  } = useQuery<Category[]>({
+    queryKey: ["categories"],
+    queryFn: fetchCategories,
+  });
+
+  const [expensesList, setExpensesList] = useState<Expense[]>(expenses || []);
+  const [filteredExpensesList, setFilteredExpensesList] =
+    useState<Expense[]>(expensesList);
   const [selectedCat, setSelectedCat] = useState<string>("");
-  const [totalPrice, setTotalPrice] = useState<number>(0);
 
   useEffect(() => {
-    if (selectedCat) {
-      const total = tasksList
-        .filter((task) => task.category === selectedCat)
-        .reduce((sum, task) => sum + task.amount, 0);
-      setTotalPrice(total);
-    } else {
-      setTotalPrice(0);
+    if (expenses) {
+      setExpensesList(expenses);
+      setFilteredExpensesList(expenses);
     }
-  }, [selectedCat, tasksList]);
-
-  const handleDelete = (taskToDelete: Task) => {
-    const updatedTasksList = tasksList.filter(
-      (task) => task.description !== taskToDelete.description
-    );
-    setTasksList(updatedTasksList);
-    setFilteredTasksList(updatedTasksList);
-  };
+  }, [expenses]);
 
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedCategory = event.target.value;
     setSelectedCat(selectedCategory);
     if (selectedCategory === "") {
-      setFilteredTasksList(tasksList);
+      setFilteredExpensesList(expensesList);
     } else {
-      setFilteredTasksList(
-        tasksList.filter((task) => task.category === selectedCategory)
+      setFilteredExpensesList(
+        expensesList.filter(
+          (task: Expense) => task.category === selectedCategory
+        )
       );
     }
   };
 
   const handleResetClick = () => {
-    setFilteredTasksList(tasksList);
+    console.log("Refaire le reset");
     setSelectedCat("");
   };
+
+  const handleDelete = () => {
+    console.log("refaire le delete");
+  };
+
+  if (expensesIsLoading) return <div>Fetching tasks...</div>;
+  if (expensesError)
+    return <div>An error occurred: {expensesError.message}</div>;
+  if (categoriesIsLoading) return <div>Fetching categories...</div>;
+  if (categoriesError)
+    return <div>An error occurred: {categoriesError.message}</div>;
 
   return (
     <>
       <h1 className="text-primary">Gestionnaire de dépenses</h1>
       <Form
-        tasksList={tasksList}
-        setTasksList={setTasksList}
-        setFilteredTasksList={setFilteredTasksList}
         selectedCat={selectedCat}
         setSelectedCat={setSelectedCat}
-        categories={categories}
+        categories={categoriesData || []}
       />
       <List
-        filteredTasksList={filteredTasksList}
+        expensesList={expensesList}
         handleDelete={handleDelete}
         handleSelectChange={handleSelectChange}
         handleResetClick={handleResetClick}
         selectedCat={selectedCat}
-        totalPrice={totalPrice}
+        categories={categoriesData || []}
+        filteredExpensesList={filteredExpensesList}
       />
     </>
   );
