@@ -17,7 +17,7 @@ const schema = z.object({
   category: z.string().min(1, { message: "Veuillez sélectionner une option" }),
 });
 
-export type Task = z.infer<typeof schema>;
+export type Expense = z.infer<typeof schema>;
 
 type Props = {
   selectedCat: string;
@@ -33,11 +33,10 @@ const Form = ({ categories }: Props) => {
     register,
     formState: { errors },
     reset,
-  } = useForm<Task>({
+  } = useForm<Expense>({
     resolver: zodResolver(schema),
   });
 
-  //? Mutation Create
   const mutation = useMutation({
     mutationKey: ["newExpense"],
     mutationFn: createExpense,
@@ -88,7 +87,7 @@ const Form = ({ categories }: Props) => {
           )}
         </div>
         <select
-          className="form-select mb-3"
+          className="form-select my-5"
           id="category"
           aria-label="Categories Select"
           {...register("category")}
