@@ -1,71 +1,124 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import Form from "./components/Form";
-import { tasksListBase, categories } from "./data/tasksListData.ts";
-import { Task } from "./components/Form.tsx";
-import List from "./components/List.tsx";
+import List from "./components/List";
+import {
+  fetchExpensesList,
+  fetchCategories,
+  deleteExpense,
+} from "./api/queries";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Category, Expense } from "./api/types";
+import ReactModal from "react-modal";
+
+ReactModal.setAppElement("#root");
 
 const App: React.FC = () => {
-  const [tasksList, setTasksList] = useState<Task[]>(tasksListBase);
-  const [filteredTasksList, setFilteredTasksList] = useState<Task[]>(tasksList);
+  const queryClient = useQueryClient();
+  const { data: expensesData } = useQuery<Expense[]>({
+    queryKey: ["expensesData"],
+    queryFn: fetchExpensesList,
+  });
+
+  const { data: categoriesData } = useQuery<Category[]>({
+    queryKey: ["categories"],
+    queryFn: fetchCategories,
+  });
+
+  const [filteredExpensesList, setFilteredExpensesList] = useState<Expense[]>(
+    []
+  );
   const [selectedCat, setSelectedCat] = useState<string>("");
-  const [totalPrice, setTotalPrice] = useState<number>(0);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [expenseId, setExpenseId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (selectedCat) {
-      const total = tasksList
-        .filter((task) => task.category === selectedCat)
-        .reduce((sum, task) => sum + task.amount, 0);
-      setTotalPrice(total);
-    } else {
-      setTotalPrice(0);
+    if (expensesData) {
+      setFilteredExpensesList(expensesData);
     }
-  }, [selectedCat, tasksList]);
-
-  const handleDelete = (taskToDelete: Task) => {
-    const updatedTasksList = tasksList.filter(
-      (task) => task.description !== taskToDelete.description
-    );
-    setTasksList(updatedTasksList);
-    setFilteredTasksList(updatedTasksList);
-  };
+  }, [expensesData]);
 
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedCategory = event.target.value;
     setSelectedCat(selectedCategory);
+
+    if (!expensesData) return;
+
     if (selectedCategory === "") {
-      setFilteredTasksList(tasksList);
+      setFilteredExpensesList(expensesData);
     } else {
-      setFilteredTasksList(
-        tasksList.filter((task) => task.category === selectedCategory)
+      const filteredExpenses = expensesData.filter(
+        (expense) => expense.category === selectedCategory
       );
+      setFilteredExpensesList(filteredExpenses);
     }
   };
 
   const handleResetClick = () => {
-    setFilteredTasksList(tasksList);
     setSelectedCat("");
+    if (expensesData) setFilteredExpensesList(expensesData);
+  };
+
+  const mutation = useMutation({
+    mutationKey: ["deleteExpense"],
+    mutationFn: deleteExpense,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["expensesData"] });
+    },
+    onError: (error) => {
+      console.error("Error deleting expense:", error);
+    },
+  });
+
+  const handleDelete = (expenseId: number) => {
+    mutation.mutate(expenseId, {
+      onSuccess: () => {
+        setFilteredExpensesList((prevList) =>
+          prevList.filter((expense) => expense.id !== expenseId)
+        );
+      },
+    });
+  };
+  const handleUpdate = (expenseId: number) => {
+    console.log("update expense id:", expenseId);
+    setIsOpen(true);
+    setExpenseId(expenseId);
   };
 
   return (
     <>
-      <h1 className="text-primary">Gestionnaire de dépenses</h1>
+      <h1 className="text-primary mb-5">Gestionnaire de dépenses</h1>
       <Form
-        tasksList={tasksList}
-        setTasksList={setTasksList}
-        setFilteredTasksList={setFilteredTasksList}
         selectedCat={selectedCat}
         setSelectedCat={setSelectedCat}
-        categories={categories}
+        categories={categoriesData || []}
+        isEdit={false}
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        expenseId={expenseId}
       />
       <List
-        filteredTasksList={filteredTasksList}
         handleDelete={handleDelete}
         handleSelectChange={handleSelectChange}
         handleResetClick={handleResetClick}
         selectedCat={selectedCat}
-        totalPrice={totalPrice}
+        categories={categoriesData || []}
+        filteredExpensesList={filteredExpensesList}
+        handleUpdate={handleUpdate}
       />
+      {isOpen && (
+        <ReactModal isOpen={true}>
+          <Form
+            expenseId={expenseId}
+            selectedCat={selectedCat}
+            setSelectedCat={setSelectedCat}
+            categories={categoriesData || []}
+            isEdit={true}
+            isOpen={isOpen}
+            setIsOpen={setIsOpen}
+          />
+        </ReactModal>
+      )}
     </>
   );
 };

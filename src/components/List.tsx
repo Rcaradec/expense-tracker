@@ -1,24 +1,27 @@
-import React from "react";
-import { Task } from "./Form";
-import { categories } from "../data/tasksListData.ts";
+import React, { useEffect } from "react";
+import { Category, Expense } from "../api/types";
 
 type Props = {
-  filteredTasksList: Task[];
-  handleDelete: (taskToDelete: Task) => void;
+  filteredExpensesList: Expense[];
+  handleDelete: (expenseId: number) => void;
   selectedCat: string;
   handleSelectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   handleResetClick: () => void;
-  totalPrice: number;
+  handleUpdate: (expenseId: number) => void;
+  categories: Category[];
 };
 
 const List = ({
-  filteredTasksList,
+  filteredExpensesList,
   handleDelete,
   selectedCat,
   handleSelectChange,
   handleResetClick,
-  totalPrice,
+  handleUpdate,
+  categories,
 }: Props) => {
+  useEffect(() => {}, [filteredExpensesList]);
+
   return (
     <>
       <select
@@ -29,8 +32,8 @@ const List = ({
       >
         <option value="">Filtrer par catégorie</option>
         {categories.map((category) => (
-          <option key={category} value={category}>
-            {category}
+          <option key={category.id} value={category.name}>
+            {category.name}
           </option>
         ))}
       </select>
@@ -49,39 +52,62 @@ const List = ({
           <strong className="text-primary">{selectedCat}</strong>
         </p>
       )}
-      <table className="table">
+      <table className="table table-hover-custom">
         <thead>
           <tr>
             <th scope="col">Description</th>
             <th scope="col">Montant</th>
             <th scope="col">Catégorie</th>
-            <th scope="col">Action</th>
+            <th scope="col" style={{ paddingLeft: "80px" }}>
+              Action
+            </th>
           </tr>
         </thead>
         <tbody>
-          {filteredTasksList.map((task) => (
-            <tr key={task.description}>
-              <td>{task.description}</td>
-              <td>{task.amount}€</td>
-              <td>{task.category}</td>
-              <td>
-                <button
-                  className="btn btn-danger"
-                  onClick={() => handleDelete(task)}
-                >
-                  Supprimer
-                </button>
-              </td>
+          {filteredExpensesList?.length > 0 &&
+            filteredExpensesList.map((expense) => (
+              <tr key={expense.id}>
+                <td>{expense.description}</td>
+                <td>{expense.amount}€</td>
+                <td>{expense.category}</td>
+                <td>
+                  <button
+                    className="btn btn-outline-danger"
+                    onClick={() => handleDelete(expense.id)}
+                  >
+                    Supprimer
+                  </button>
+                  <button
+                    className="btn btn-outline-primary ms-3"
+                    onClick={() => handleUpdate(expense.id)}
+                  >
+                    Editer
+                  </button>
+                </td>
+              </tr>
+            ))}
+          {filteredExpensesList?.length === 0 && (
+            <tr>
+              <td colSpan={4}>Aucune dépense trouvée</td>
             </tr>
-          ))}
+          )}
         </tbody>
+        <tfoot>
+          <tr>
+            <td>Total</td>
+            <td>
+              {" "}
+              {filteredExpensesList?.length > 0 &&
+                filteredExpensesList
+                  .reduce((acc, expense) => expense.amount + acc, 0)
+                  .toFixed(2)}
+              €
+            </td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tfoot>
       </table>
-      {selectedCat !== "" && (
-        <p>
-          Total pour {selectedCat}:{" "}
-          <strong className="text-primary">{totalPrice}€</strong>
-        </p>
-      )}
     </>
   );
 };
