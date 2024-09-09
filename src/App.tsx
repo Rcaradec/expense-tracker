@@ -9,6 +9,9 @@ import {
 } from "./api/queries";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Category, Expense } from "./api/types";
+import ReactModal from "react-modal";
+
+ReactModal.setAppElement("#root");
 
 const App: React.FC = () => {
   const queryClient = useQueryClient();
@@ -26,6 +29,8 @@ const App: React.FC = () => {
     []
   );
   const [selectedCat, setSelectedCat] = useState<string>("");
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [expenseId, setExpenseId] = useState<number | null>(null);
 
   useEffect(() => {
     if (expensesData) {
@@ -74,14 +79,23 @@ const App: React.FC = () => {
       },
     });
   };
+  const handleUpdate = (expenseId: number) => {
+    console.log("update expense id:", expenseId);
+    setIsOpen(true);
+    setExpenseId(expenseId);
+  };
 
   return (
     <>
-      <h1 className="text-primary">Gestionnaire de dépenses</h1>
+      <h1 className="text-primary mb-5">Gestionnaire de dépenses</h1>
       <Form
         selectedCat={selectedCat}
         setSelectedCat={setSelectedCat}
         categories={categoriesData || []}
+        isEdit={false}
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        expenseId={expenseId}
       />
       <List
         handleDelete={handleDelete}
@@ -90,7 +104,21 @@ const App: React.FC = () => {
         selectedCat={selectedCat}
         categories={categoriesData || []}
         filteredExpensesList={filteredExpensesList}
+        handleUpdate={handleUpdate}
       />
+      {isOpen && (
+        <ReactModal isOpen={true}>
+          <Form
+            expenseId={expenseId}
+            selectedCat={selectedCat}
+            setSelectedCat={setSelectedCat}
+            categories={categoriesData || []}
+            isEdit={true}
+            isOpen={isOpen}
+            setIsOpen={setIsOpen}
+          />
+        </ReactModal>
+      )}
     </>
   );
 };

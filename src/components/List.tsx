@@ -7,6 +7,7 @@ type Props = {
   selectedCat: string;
   handleSelectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   handleResetClick: () => void;
+  handleUpdate: (expenseId: number) => void;
   categories: Category[];
 };
 
@@ -16,6 +17,7 @@ const List = ({
   selectedCat,
   handleSelectChange,
   handleResetClick,
+  handleUpdate,
   categories,
 }: Props) => {
   useEffect(() => {}, [filteredExpensesList]);
@@ -56,7 +58,9 @@ const List = ({
             <th scope="col">Description</th>
             <th scope="col">Montant</th>
             <th scope="col">Catégorie</th>
-            <th scope="col">Action</th>
+            <th scope="col" style={{ paddingLeft: "80px" }}>
+              Action
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -72,6 +76,12 @@ const List = ({
                     onClick={() => handleDelete(expense.id)}
                   >
                     Supprimer
+                  </button>
+                  <button
+                    className="btn btn-outline-primary ms-3"
+                    onClick={() => handleUpdate(expense.id)}
+                  >
+                    Editer
                   </button>
                 </td>
               </tr>

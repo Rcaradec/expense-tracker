@@ -27,10 +27,28 @@ export const createExpense = async (newExpense: ExpensePayload) => {
   return response.data;
 };
 
+export const fetchOneExpense = async (expenseId: number) => {
+  const response = await axios.get(baseUrl + "expenses/" + expenseId);
+  if (response.status !== 200) {
+    throw new Error("Network response on get expense was not ok");
+  }
+  return response.data;
+};
+
 export const deleteExpense = async (expenseId: number) => {
   const response = await axios.delete(baseUrl + "expenses/" + expenseId);
   if (response.status !== 200 && response.status !== 204) {
     throw new Error("Network response on delete expense was not ok");
+  }
+  return response.data;
+};
+export const updateExpense = async (
+  expenseId: number,
+  expense: ExpensePayload
+) => {
+  const response = await axios.put(baseUrl + "expenses/" + expenseId, expense);
+  if (response.status !== 200) {
+    throw new Error("Network response on update expense was not ok");
   }
   return response.data;
 };
