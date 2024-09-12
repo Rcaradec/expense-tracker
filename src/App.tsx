@@ -80,7 +80,6 @@ const App: React.FC = () => {
     });
   };
   const handleUpdate = (expenseId: number) => {
-    console.log("update expense id:", expenseId);
     setIsOpen(true);
     setExpenseId(expenseId);
   };
